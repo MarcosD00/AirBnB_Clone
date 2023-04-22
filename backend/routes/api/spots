@@ -8,7 +8,7 @@ const { setTokenCookie, restoreUser } = require('../../utils/auth');
 const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize } = require('../../db/models');
 const router = express.Router();
 
-
+//GET all spots
 router.get('/', async (req,res, next) => {
     const where = {}
     const spots = await Spot.findAll({
@@ -56,36 +56,48 @@ router.get('/', async (req,res, next) => {
     res.json({
         Spots: spotObj
     })
-  
-    // const spots = await Spot.findAll({
-    //     attributes: ['ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'createdAt', 'updatedAt'],
-    //     // where: {
-    //     //     spotId: spots.id
-    //     // },
-    //   });
+});
 
-    // const theSpots = [];
+const SpotValidator = [
+    check('credential')
+    .exists({ checkFalsy: true })
+    .notEmpty()
+];
+// const validateLogin = [
+//     check('credential')
+//       .exists({ checkFalsy: true })
+//       .notEmpty()
+//       .withMessage('Please provide a valid email or username.'),
+//     check('password')
+//       .exists({ checkFalsy: true })
+//       .withMessage('Please provide a password.'),
+//     handleValidationErrors
+//   ];
+//POST
+router.post('/', SpotValidator,async (req,res, next) => {
+const { user } = req;
+const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
-    // for (let spot of spots){
+if (!user) res.json({error: "Logging to create a spot"})
 
-    //     let jSpot = spot.toJSON();
-
-    //     const count = await Review.count({where: {spotId: jSpot.id}});
-    //     console.log("count =======>", count)
-    //     const sum = await Review.sum('stars', {where: { spotId: jSpot}});
-
-    //     const avgStars = sum / count;
-
-    //     jSpot.avgRating = avgStars;
-
-    //     const prevImg = await SpotImage.findOne({ where: { spotId: jSpot.id }});
-
-    //     if (prevImg) jSpot.prevImg = previewImage.url;
-
-    //     theSpots.push(jSpot);
-    // }
-
-    // return res.json({theSpots});
+if(user) {
+    const userI = await User.findByPk(user.id);
+    const newSpots = await Spot.create({
+        ownerId: userI.id,
+        address,
+        city,
+        state,
+        country,
+        lat,
+        lng,
+        name,
+        description,
+        price
+        })
+    
+    res.statusCode = 201;
+    res.json(newSpots)
+    }
 });
 
 module.exports = router;

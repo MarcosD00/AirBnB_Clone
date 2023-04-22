@@ -1,0 +1,91 @@
+const express = require('express');
+const { Op } = require('sequelize');
+const bcrypt = require('bcryptjs');
+const { check } = require('express-validator');
+const { handleValidationErrors } = require('../../utils/validation');
+
+const { setTokenCookie, restoreUser } = require('../../utils/auth');
+const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize } = require('../../db/models');
+const router = express.Router();
+
+
+router.get('/', async (req,res, next) => {
+    const where = {}
+    const spots = await Spot.findAll({
+        where,
+        include: [
+            {
+            model: SpotImages,
+            attributes: ['url', 'preview']
+            }
+        ],
+        // limit: query.limit,
+        // offset: query.offset
+    });
+
+    const spotObj = [];
+    spots.length ?
+    spots.forEach(spot => spotObj.push(spot.toJSON()))
+    : spotObj.push(spots);
+
+    for(let spot of spotObj){
+        if(!Object.keys(spot).length) break;
+        const review = await Review.findOne({
+            where: {
+                spotId: spot.id
+            },
+            attibutes: [
+                [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating']
+            ]
+        })
+        if (review) {
+            spot.avgRating = Number(review.toJSON().avgRating).toFixed(1);
+        } else {
+            spot.avgRating = " No Review exist for this spot"
+        }
+
+        if(spot.SpotImages.length) {
+            const filterTrue = spot.SpotImages.filter(image => image.preview === true);
+            filterTrue.length ? spot.previewImage = filterTrue[0].url : spot.previewImage = "No Preview Image Available"
+        } else {
+            spot.previewImage = "No Preview Image Available";
+        }
+        delete spot.SpotImages;
+    };
+    res.status(200);
+    res.json({
+        Spots: spotObj
+    })
+  
+    // const spots = await Spot.findAll({
+    //     attributes: ['ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'createdAt', 'updatedAt'],
+    //     // where: {
+    //     //     spotId: spots.id
+    //     // },
+    //   });
+
+    // const theSpots = [];
+
+    // for (let spot of spots){
+
+    //     let jSpot = spot.toJSON();
+
+    //     const count = await Review.count({where: {spotId: jSpot.id}});
+    //     console.log("count =======>", count)
+    //     const sum = await Review.sum('stars', {where: { spotId: jSpot}});
+
+    //     const avgStars = sum / count;
+
+    //     jSpot.avgRating = avgStars;
+
+    //     const prevImg = await SpotImage.findOne({ where: { spotId: jSpot.id }});
+
+    //     if (prevImg) jSpot.prevImg = previewImage.url;
+
+    //     theSpots.push(jSpot);
+    // }
+
+    // return res.json({theSpots});
+});
+
+module.exports = router;

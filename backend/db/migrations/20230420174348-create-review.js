@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 let options = {};
 if (process.env.NODE_ENV === 'production') {
@@ -6,35 +6,33 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable("Users", {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('Reviews', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      firstName: {
+      spotId: {
         allowNull: false,
-        type: Sequelize.STRING(30),
+        references: { model: 'Spots' },
+        onDelete: 'CASCADE',
+        type: Sequelize.INTEGER
       },
-      lastName: {
+      userId: {
         allowNull: false,
-        type: Sequelize.STRING(30),
+        references: { model: 'Users' },
+        onDelete: 'CASCADE',
+        type: Sequelize.INTEGER
       },
-      username: {
-        type: Sequelize.STRING(30),
+      review: {
         allowNull: false,
-        unique: true,
+        type: Sequelize.STRING
       },
-      email: {
-        type: Sequelize.STRING(256),
+      stars: {
         allowNull: false,
-        unique: true
-      },
-      hashedPassword: {
-        type: Sequelize.STRING.BINARY,
-        allowNull: false
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
@@ -49,7 +47,7 @@ module.exports = {
     }, options);
   },
   down: async (queryInterface, Sequelize) => {
-    options.tableName = "Users";
+    options.tableName = "Reviews";
     return queryInterface.dropTable(options);
   }
-};
+}; 

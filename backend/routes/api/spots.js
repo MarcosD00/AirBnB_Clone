@@ -225,8 +225,6 @@ router.get(
                 ]
             })
 
-        group: ['SpotImages.id', 'Spot.id', 'Owner.id']
-
         res.status(200);
         res.json({spot})
     });

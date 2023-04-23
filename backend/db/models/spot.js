@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
       Spot.belongsTo(models.User,
         { 
           foreignKey: 'ownerId',
-          onDelete: "CASCADE",
           as: 'Owner'
         }
       );

@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
       Spot.belongsTo(models.User,
         { 
           foreignKey: 'ownerId',
-          onDelete: "CASCADE"
+          onDelete: "CASCADE",
+          as: 'Owner'
         }
       );
 
@@ -75,11 +76,11 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Spot',
-    defaultScope: {
-      attributes: {
-        exclude: ["createdAt", "updatedAt"]
-      }
-    }
+    // defaultScope: {
+    //   attributes: {
+    //     exclude: ["createdAt", "updatedAt"]
+    //   }
+    // }
   });
   return Spot;
 };

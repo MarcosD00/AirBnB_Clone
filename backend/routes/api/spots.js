@@ -6,6 +6,7 @@ const { handleValidationErrors } = require('../../utils/validation');
 
 const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
 const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize } = require('../../db/models');
+const booking = require('../../db/models/booking');
 const router = express.Router();
 
 //GET all spots
@@ -369,15 +370,16 @@ router.post(
             where:{spotId: spotId, userId: userId}   
             });
 
+        if (!spots) res.status(404).json({
+            message: "Spot couldn't be found",
+            statusCode: 404
+        });
+
         if (reviewsOfSpots) res.status(403).json({
             message: "User already has a review for this spot",
             statusCode: 403
         });
 
-        if (!spots) res.status(404).json({
-                message: "Spot couldn't be found",
-                statusCode: 404
-        });
 
         const newReviewOfSpot = await Review.create({
             userId ,
@@ -389,4 +391,66 @@ router.post(
         res.status(201).json({newReviewOfSpot});
     });
 
+router.post(
+        "/:spotId/bookings",
+        requireAuth,
+        async (req, res) => {
+            const spotId = req.params.spotId;
+            const bookingId = req.params.bookingId;
+            const {user} = req;
+
+            const {startDate , endDate} = req.body;
+            const firstBookingDay = Date.parse(startDate);
+            const lastBookingDay = Date.parse(endDate);
+            const newDate = new Date();
+            const today = Date.parse(newDate);
+
+            const spots = await Spot.findByPk(spotId, { include: [{ model: Booking }]});
+            const bookings = await Booking.findByPk(bookingId);
+            
+            if (!spots) res.status(404).json({
+                message: "Spot couldn't be found",
+                statusCode: 404
+            });
+    
+            if (spots.ownerId === user.dataValues.id) res.status(403).json({
+                    message: "This spot is owned by you",
+                    statusCode: "403"
+                });
+            
+            const spotObj = spots.toJSON();
+
+            for(let spot of spotObj.Bookings) {
+                const firstDay = Date.parse(spot.startDate);
+                const lastDay = Date.parse(spot.endDay);
+
+                if (today > endDate) res.status(403).json({
+                        statusCode: 403,
+                        message: "Past bookings can't be modified"
+                    })
+
+                if ((firstDay === lastBookingDay 
+                || lastBookingDay === lastDay 
+                || (lastBookingDay < lastDay 
+                && lastBookingDay > lastDay)) 
+                || (firstBookingDay === firstDay 
+                || firstDay === firstBookingDay 
+                || (firstDay < lastBookingDay 
+                && firstDay > firstBookingDay))) res.status(403).json({
+                    message: "Sorry, this spot is already booked for the specified dates",
+                    statusCode: 403,
+                    errors: {
+                        startDate: "Start date conflicts with an existing booking",
+                        endDate: "End date conflicts with an existing booking"
+                    }
+                })
+            }
+            const createBooking = await Booking.create({
+                userId: user.dataValues.id,
+                spotId: spotId,
+                startDate,
+                endDate
+            })
+            res.json(createBooking);
+        });
 module.exports = router;

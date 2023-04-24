@@ -9,7 +9,6 @@ module.exports = (sequelize, DataTypes) => {
 
       ReviewImage.belongsTo(models.Review,{
         foreignKey: 'reviewId',
-        onDelete: "CASCADE",
       });
     }
   }
@@ -21,15 +20,16 @@ module.exports = (sequelize, DataTypes) => {
     url:{
       type: DataTypes.STRING,
       allowNull: false,
-    }
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+    },
   }, {
     sequelize,
     modelName: 'ReviewImage',
-    defaultScope: {
-      attributes: {
-        exclude: ["createdAt", "updatedAt"]
-      }
-    }
   });
   return ReviewImage;
 };

@@ -451,27 +451,12 @@ router.get(
     async (req, res) => {
         const spotId = req.params.spotId;
         const spots = await Spot.findByPk(spotId);
-        const {stars, review} = req.body
 
         if (!spots) res.status(404).json({
                 message: "Spot couldn't be found",
                 statusCode: 404
             })
-      let err = {};
-        
-        if ( stars > 5 ||!stars || stars < 1){
-             err.stars = 'Stars must be an integer from 1 to 5';
-            };
-        if (!review) {
-            err.review = "Review text is required";
-            };
-        if (err.review || err.stars) {
-            res.status(400).json({
-                "message": "Validation error",
-                "statusCode": 400,
-                err
-            });
-        };
+
         const reviewsOfSpots = await Review.findAll({
             where: { spotId },
             include: [

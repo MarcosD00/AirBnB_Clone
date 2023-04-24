@@ -1,8 +1,6 @@
-# `<name of application here>`
+# `AirBnB_Clone(for now)`
 
 ## Database Schema Design
-
-`<insert database schema design here>`
 
 ## API Documentation
 

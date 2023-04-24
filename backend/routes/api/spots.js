@@ -2,18 +2,102 @@ const express = require('express');
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
+const { handleErrorsForSpots } = require('../../utils/validation');
+
 
 const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
 const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize } = require('../../db/models');
 const booking = require('../../db/models/booking');
+const { query } = require('express');
 const router = express.Router();
 
-//GET all spots
+const errorHandlerOfBookings = [
+    check('startDate')
+        .exists({ checkFalsy: true }),
+    check('endDate')
+        .exists({ checkFalsy: true })
+        .custom((value, { req }) => {
+            if (value <= req.body.startDate) {
+                throw new Error('endDate cannot be on or before startDate');
+            }
+            return true
+        }),
+        handleErrorsForSpots
+]
+
+const SpotValidator = [
+    check('address')
+      .notEmpty()
+      .withMessage('Street address is required'),
+    check('city')
+      .notEmpty()
+      .withMessage('City is required'),
+    check('state')
+      .notEmpty()
+      .withMessage('State is required'),
+    check('country')
+      .notEmpty()
+      .withMessage('Country is required'),
+    check('lat')
+      .notEmpty()
+      .isNumeric()
+      .withMessage('Latitude is not valid'),
+    check('lng')
+      .notEmpty()
+      .isNumeric()
+      .withMessage('Longitude is not valid'),
+    check('name')
+      .notEmpty()
+      .isLength({ max: 50 })
+      .withMessage('Name must be less than 50 characters'),
+    check('description')
+      .notEmpty()
+      .withMessage('Description is required'),
+    check('description')
+      .notEmpty()
+      .withMessage('Price per day is required'),
+      handleErrorsForSpots
+  ];
+
+  
+
+/*GET ALL SPOTS*/
 router.get(
     '/', 
     async (req,res, next) => {
         const where = {}
+
+        let { page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+
+        if (req.query.minLat && req.query.maxLat) where.lat = { [Op.gte]: Number(minLat), [Op.lte]: Number(maxLat) };
+
+        if (req.query.minLat) where.lat = { [Op.gte]: Number(minLat) };
+
+        if (req.query.maxLat) where.lat = { [Op.lte]: Number(maxLat) };
+
+        if(req.query.minLng && req.query.maxLng) {where.lng = { [Op.gte]: Number(minLng), [Op.lte]: Number(maxLng) }};
+
+        if (req.query.minLng) where.lng = { [Op.gte]: Number(minLng) };
+
+        if (req.query.maxLng) where.lng = { [Op.lte]: Number(maxLng) };
+
+        if (req.query.minPrice && req.query.maxPrice) {where.price = { [Op.gte]: Number(minPrice), [Op.lte]: Number(maxPrice) }};
+
+        if (req.query.minPrice) where.price = { [Op.gte]: Number(minPrice) };
+
+        if (req.query.maxPrice) where.price = { [Op.lte]: Number(maxPrice) };
+
+        if (!page) page = 1;
+        if (!size) size = 20;
+    
+        if (parseInt(page) > 10) page = 10;
+        if (parseInt(size) > 20) size = 20;
+    
+        if (parseInt(page) && parseInt(size)) {
+            query.limit = size;
+            query.offset = size * (page - 1);
+        };
+
         const spots = await Spot.findAll({
         where,
         include: [
@@ -22,8 +106,8 @@ router.get(
             attributes: ['url', 'preview']
             }
         ],
-        // limit: query.limit,
-        // offset: query.offset
+        limit: query.limit,
+        offset: query.offset
     });
 
     const spotObj = [];
@@ -76,8 +160,6 @@ router.get(
                 attributes: ['url', 'preview']
                 }
             ],
-            // limit: query.limit,
-            // offset: query.offset
         });
     
         const spotObj = [];
@@ -115,44 +197,9 @@ router.get(
         })
     });
 
-const SpotValidator = [
-  check('address')
-    .notEmpty()
-    .withMessage('Street address is required'),
-  check('city')
-    .notEmpty()
-    .withMessage('City is required'),
-  check('state')
-    .notEmpty()
-    .withMessage('State is required'),
-  check('country')
-    .notEmpty()
-    .withMessage('Country is required'),
-  check('lat')
-    .notEmpty()
-    .isNumeric()
-    .withMessage('Latitude is not valid'),
-  check('lng')
-    .notEmpty()
-    .isNumeric()
-    .withMessage('Longitude is not valid'),
-  check('name')
-    .notEmpty()
-    .isLength({ max: 50 })
-    .withMessage('Name must be less than 50 characters'),
-  check('description')
-    .notEmpty()
-    .withMessage('Description is required'),
-  check('description')
-    .notEmpty()
-    .withMessage('Price per day is required'),
-    handleValidationErrors
-];
-
 //POST Create a new spot
 router.post(
     '/',
-    SpotValidator,
     requireAuth,
     async (req,res, next) => {
       const { user } = req;
@@ -165,6 +212,39 @@ router.post(
        err.errors = { credential: 'The provided credentials were invalid.' };
            return next(err);
         }
+        const err = {}
+        if (!address) {
+            err.address = "Street address is required";
+        }
+        if (!city) {
+            err.city = 'City is required';
+            };
+        if (!state){
+             err.state = 'State is required';
+            };
+        if (!country){
+             err.country = 'Country is required';
+            };
+        if (!lat) {
+            err.lat = 'Latitude is not valid';
+            };
+        if (!lng){
+             err.lng = 'Longitude is not valid';
+            };
+        if (!name || name.length > 50){
+             err.name = 'Name must be less than 50 characters';
+            };
+        if (!description) {
+            err.description = 'Description is required';
+            };
+        if (!price) {
+            err.price = 'Price per day is required';
+            };
+        if (Object.keys(err).length > 0) res.status(400).json({
+                "message": "Validation Error",
+                "statusCode": 400,
+                err
+            });
 
 const newSpots = await Spot.create({ownerId: user.id, address, city, state, country, lat, lng, name, description, price});
 
@@ -188,7 +268,7 @@ const newSpots = await Spot.create({ownerId: user.id, address, city, state, coun
     res.json({
       newSpots: safeUser  
     })
-    
+
   }
 );
 
@@ -249,21 +329,57 @@ router.put(
             statusCode: 404,
             message: "Spot couldn't be found",
         })
+        
 
         const { address, city, state, country, 
                 lat, lng, name, description, price } = req.body;
 
-            spotInfo.set({
-                address: address,
-                city: city,
-                state: state,
-                country: country,
-                lat: lat,
-                lng: lng,
-                name: name,
-                description: description,
-                price: price
-            })
+        const err = {}
+        if (!address) {
+            err.address = "Street address is required";
+        }
+        if (!city) {
+            err.city = 'City is required';
+            };
+        if (!state){
+                err.state = 'State is required';
+            };
+        if (!country){
+                err.country = 'Country is required';
+            };
+        if (!lat) {
+            err.lat = 'Latitude is not valid';
+            };
+        if (!lng){
+                err.lng = 'Longitude is not valid';
+            };
+        if (!name || name.length > 50){
+                err.name = 'Name must be less than 50 characters';
+            };
+        if (!description) {
+            err.description = 'Description is required';
+            };
+        if (!price) {
+            err.price = 'Price per day is required';
+            };
+        if (Object.keys(err).length > 0) res.status(400).json({
+                "message": "Validation Error",
+                "statusCode": 400,
+                err
+            });
+
+        spotInfo.set({
+            address: address,
+            city: city,
+            state: state,
+            country: country,
+            lat: lat,
+            lng: lng,
+            name: name,
+            description: description,
+            price: price
+        })
+            
         await spotInfo.save()
 
         res.status(200).json(spotInfo)
@@ -304,21 +420,23 @@ router.post(
 router.delete(
     '/:spotId',
     requireAuth,
+    restoreUser,
     async (req, res, next) => {
             
         const { user } = req;
         const { spotId } = req.params;
         const spotInfo = await Spot.findOne({where: { id: spotId }});
     
+        if (!spotInfo) res.status(404).json({
+            statusCode: 404,
+            message: "Spot couldn't be found",
+        });
+
         if (spotInfo.ownerId !== user.id) res.status(403).json({
             statusCode:403,
             message:'Info not found'
         })
     
-        if (!spotInfo) res.status(404).json({
-            statusCode: 404,
-            message: "Spot couldn't be found",
-        })
     
         await spotInfo.destroy({where: { id: spotId }});
 
@@ -333,12 +451,27 @@ router.get(
     async (req, res) => {
         const spotId = req.params.spotId;
         const spots = await Spot.findByPk(spotId);
-        
+        const {stars, review} = req.body
+
         if (!spots) res.status(404).json({
                 message: "Spot couldn't be found",
                 statusCode: 404
             })
-
+      let err = {};
+        
+        if ( stars > 5 ||!stars || stars < 1){
+             err.stars = 'Stars must be an integer from 1 to 5';
+            };
+        if (!review) {
+            err.review = "Review text is required";
+            };
+        if (err.review || err.stars) {
+            res.status(400).json({
+                "message": "Validation error",
+                "statusCode": 400,
+                err
+            });
+        };
         const reviewsOfSpots = await Review.findAll({
             where: { spotId },
             include: [
@@ -396,7 +529,6 @@ router.post(
         requireAuth,
         async (req, res) => {
             const spotId = req.params.spotId;
-            const bookingId = req.params.bookingId;
             const {user} = req;
 
             const {startDate , endDate} = req.body;
@@ -406,7 +538,6 @@ router.post(
             const today = Date.parse(newDate);
 
             const spots = await Spot.findByPk(spotId, { include: [{ model: Booking }]});
-            const bookings = await Booking.findByPk(bookingId);
             
             if (!spots) res.status(404).json({
                 message: "Spot couldn't be found",
@@ -452,5 +583,45 @@ router.post(
                 endDate
             })
             res.json(createBooking);
+        });
+    
+        router.get('/:spotId/bookings',
+        requireAuth,
+        async (req, res) => {
+            const userId = req.user.id;
+            const spotId = req.params.spotId;
+            const spot = await Spot.findByPk(req.params.spotId);
+    
+
+            if (!spot) {
+                res.status(404).json({
+                    message: "Spot couldn't be found",
+                    statusCode: 404
+                });
+            }
+    
+            if (userId === spot.ownerId) {
+                const bookings = await Booking.findAll({
+                    where: {spotId: req.params.spotId},
+                    include: [
+                        {
+                            model: User,
+                            attributes: ['id', 'firstName', 'lastName']
+                        }
+                    ]
+                })
+
+                return res.status(200).json({ Booking: bookings })
+
+            } 
+                const bookings = await Booking.findAll({
+                    where: {
+                        spotId: spotId
+                    },
+                    attributes: ['spotId', 'startDate', 'endDate']
+                })
+
+                return res.status(200).json({ Booking: bookings })
+            
         });
 module.exports = router;

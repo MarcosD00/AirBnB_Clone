@@ -1,17 +1,14 @@
 const express = require('express');
-const { Op } = require('sequelize');
-const bcrypt = require('bcryptjs');
 const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
+const { handleErrorsForSpots } = require('../../utils/validation');
 
-const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
-const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize } = require('../../db/models');
+const {requireAuth,  restoreUser } = require('../../utils/auth');
+const { Spot, SpotImages, Review, ReviewImage, User, } = require('../../db/models');
 const router = express.Router();
 
 router.get('/current',
     requireAuth,
     async (req, res) => {
-        const{user} = req;
         const where = {}
         const reviews = await Review.findAll(
         {
@@ -103,11 +100,20 @@ router.post(
       res.json({id: newRevImages.id, url: newRevImages.url});
     });
 
+const validateEditReview = [
+    check('review')
+        .exists({ checkFalsy: true })
+        .withMessage('Review text is required'),
+    check('stars')
+        .isInt({ min: 1, max: 5 })
+        .withMessage('Stars must be an integer from 1 to 5'),
+        handleErrorsForSpots,
+    ];
+
 router.put('/:reviewId', 
     requireAuth,
     async(req, res) => {
         const userId = req.user.id;
-        const reviewId = (req.params.reviewId);
 
         const reviewList = await Review.findByPk(req.params.reviewId);
 
@@ -122,6 +128,21 @@ router.put('/:reviewId',
           });
 
         const { review, stars } = req.body;
+        let err = {};
+
+        if ( stars > 5 ||!stars || stars < 1){
+             err.stars = 'Stars must be an integer from 1 to 5';
+            };
+        if (!review) {
+            err.review = "Review text is required";
+            };
+        if (err.review || err.stars) {
+            res.status(400).json({
+                "message": "Validation error",
+                "statusCode": 400,
+                err
+            });
+        };
 
         const updatedReviewList = await reviewList.update({
             review,
@@ -132,8 +153,9 @@ router.put('/:reviewId',
 
 router.delete(
     '/:reviewId',
+    restoreUser,
     requireAuth,
-    async (req, res, next) => {
+    async (req, res, _next) => {
         const userId = req.user.id
         const reviewId = req.params.reviewId
         const review = await Review.findByPk(reviewId)

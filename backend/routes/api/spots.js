@@ -287,7 +287,7 @@ router.get(
         const spot = await Spot.findOne({
             where: 
             {
-                Id: spotId
+                id: spotId
             },
             attibutes: [
                 [sequelize.fn('AVG', sequelize.col('Review.stars')), 'avgRating'],

@@ -1,7 +1,7 @@
 
 const express = require('express'); //This file will hold the resources for the route paths beginning with /api/spots.
 const router = express.Router();
-const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize } = require('../../db/models');
+const { Spot, SpotImages, Review, ReviewImage, Booking, sequelize, User, Sequelize, Op} = require('../../db/models');
 const { requireAuth } = require('../../utils/auth');
 
 /* DELETE BOOKINGS BY BOOKING ID */
@@ -77,90 +77,85 @@ router.get('/current', requireAuth, async (req, res) => {
 
 
 /* EDIT BOOKINGS BY ID */
-router.put(
-    '/:bookingId',
+router.put('/:bookingId',
     requireAuth,
     async (req, res, next) => {
         const { user } = req;
-        const bookingId = req.params.bookingId;
-        const { startDate, endDate } = req.body;
+        let { startDate, endDate } = req.body;
 
-        const startDay = new Date(startDate);
-        const endDay = new Date(endDate);
-        const today = new Date();
+        startDate = new Date(startDate);
+        endDate = new Date(endDate);
+        const currentDate = new Date();
 
+        const bookings = await Booking.findByPk(req.params.bookingId);
 
-        const booking = await Booking.findByPk(bookingId);
-        
-        if (!booking) {
+        if (!bookings)
             return res.status(404).json({
                 message: "Booking couldn't be found",
                 statusCode: 404
-            })
-        };
+            });
 
-        if (booking.userId !== user.id) {
+        if (bookings.userId !== user.id)
             return res.status(403).json({
                 message: "Forbidden",
                 statusCode: 403
-            })
-        };
-        const dateErrors = {};
-        
-        if ( startDay >= endDay ) dateErrors.endDay = "endDate cannot be on or before startDate"
-        if ( today > startDay ) {
-            dateErrors.startDay = "startDate cannot be before current date"
-        }
-        if (Object.keys(dateErrors).length) return res.status(400).json({
-                message: "Validation error",
-                statusCode: 400,
-                errors: dateErrors,
             });
 
-        if (booking.endDay < today) {
+        const errorConflictResponse = {};
+        const errorValidator = {};
+
+        if (startDate < currentDate) errorValidator.startDate = "startDate cannot be before current date";
+        if (endDate <= startDate) errorValidator.endDate = "endDate cannot be on or before startDate";
+
+        if (Object.keys(errorValidator).length) 
+            return res.status(400).json({
+                message: "Validation error",
+                statusCode: 400,
+                errors: errorValidator,
+            });
+
+        if (bookings.endDate < currentDate) {
             const err = new Error("Past bookings can't be modified");
             err.status = 403;
             return next(err);
-        }
+        };
 
-        const allBookings = await Booking.findAll({
-            where: { spotId: booking.spotId }
-        })
-        const conflictErrors = {};
+        const bookingInExistence = await Booking.findAll({
+            where: { spotId: bookings.spotId }
+        });
+
         const listOfBookings = [];
-        if ( allBookings.length ) {
+        bookingInExistence.length ? bookingInExistence.forEach(booking => listOfBookings.push(booking.toJSON()))
+            : listOfBookings.push(bookingInExistence);
 
-            allBookings.forEach(booking => listOfBookings.push(booking.toJSON()));
-            listOfBookings.push(allBookings);
+            
+        for (let book of listOfBookings) {
+            if (book.id === parseInt(req.params.bookingId)) continue;
 
+            if (!Object.keys(book).length) break;
+            
+            if (startDate >= book.startDate && endDate <= book.endDate) {
+                errorConflictResponse.startDate = "Start date conflicts with an existing booking";
+                errorConflictResponse.endDate = "End date conflicts with an existing booking";
+            }
+            else if (startDate.getTime() === book.startDate.getTime())
+                errorConflictResponse.startDate = "Start date conflicts with an existing booking";
+            else if (startDate < book.startDate && endDate > book.startDate)
+                errorConflictResponse.endDate = "End date conflicts with an existing booking";
+            else if (startDate > book.startDate && startDate < book.endDate) 
+                errorConflictResponse.startDate = "Start date conflicts with an existing booking";
         };
 
-        for ( book of listOfBookings ) {
-
-            if (Object.keys(book).length === 0) break;
-            if (book.id === parseInt(bookingId)) {
-                continue;
-            };
-            if (startDay >= book.startDay && endDay <= book.endDay) {
-                conflictErrors.startDay = "Start date conflicts with an existing booking";
-                conflictErrors.endDay = "End date conflicts with an existing booking";
-            };
-            if (startDay.getTime() === book.startDay.getTime()) conflictErrors.startDay = "Start date conflicts with an existing booking";
-            if (startDay < book.startDay && endDay > book.startDay) conflictErrors.endDay = "End date conflicts with an existing booking";
-            if (startDay > book.startDay && startDay < book.endDay) conflictErrors.startDay = "Start date conflicts with an existing booking";
-        };
-
-        if (Object.keys(conflictErrors).length) {
+        if (Object.keys(errorConflictResponse).length) {
             const err = Error("Sorry, this spot is already booked for the specified dates");
-            err.errors = conflictErrors;
+            err.errors = errorConflictResponse;
             err.status = 403;
             return next(err);
         };
 
-        booking.set({startDay, endDay})
-        await booking.save();
+        bookings.set({startDate, endDate});
+        await bookings.save();
         res.status(200);
-        res.json(booking);
+        res.json(bookings);
     });
-
 module.exports = router;

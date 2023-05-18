@@ -246,28 +246,23 @@ router.post(
                 err
             });
 
-const newSpots = await Spot.create({ownerId: user.id, address, city, state, country, lat, lng, name, description, price});
+const newSpots = await Spot.create({
+    ownerId: user.id,
+    address,
+    city,
+    state,
+    country,
+    lat,
+    lng,
+    name,
+    description,
+    price
+});
 
-
-    const safeUser = {
-          ownerId: user.id,
-          address: address,
-          city: city,
-          state: state,
-          country: country,
-          lat: lat,
-          lng: lng,
-          name: name,
-          description: description,
-          price: price
-        };  
-
-    await setTokenCookie(res, safeUser);
+    await setTokenCookie(res, newSpots);
 
     res.statusCode = 201;
-    res.json({
-      newSpots: safeUser  
-    })
+    res.json(newSpots)
 
   }
 );
@@ -506,7 +501,7 @@ router.post(
             stars
         });
             
-        res.status(201).json({newReviewOfSpot});
+        res.status(201).json(newReviewOfSpot);
     });
 
 router.post(

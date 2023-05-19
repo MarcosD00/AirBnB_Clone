@@ -6,45 +6,7 @@ const {requireAuth,  restoreUser } = require('../../utils/auth');
 const { Spot, SpotImages, Review, ReviewImage, User, } = require('../../db/models');
 const router = express.Router();
 
-// router.get('/current', requireAuth, async (req, res) => {
 
-//   let reviews = await Review.findAll({
-//       where: {userId: req.user.id}
-//   })
-//   let reviewAnswer = []
-//   for (let review of reviews) {
-//       let reviewPayload = {}
-//       let spot = await Spot.findOne({
-//           where: {id: review.spotId},
-//           attributes: ['id', 'ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'price']
-//       })
-//       let preview = await SpotImages.findOne({
-//           where: {spotId: spot.id},
-//           attributes: ['url']
-//       })
-//       let reviewImages = await ReviewImage.findAll({
-//           where: {reviewId: review.id},
-//           attributes: ['id', 'url']
-//       })
-//       for(let key in review.dataValues) reviewPayload[key] = review[key]
-//       let spotPOJO = {}
-//       for (let key in spot.dataValues) spotPOJO[key] = spot[key]
-//       spotPOJO.previewImage = preview ? JSON.stringify(preview.url).split('"')[1]
-//       : 'No preview available'
-//       let {id, firstName, lastName} = req.user
-//       reviewPayload.User = {id, firstName, lastName}
-//       reviewPayload.Spot = spotPOJO
-//       reviewPayload.ReviewImages = reviewImages
-//       reviewAnswer.push(reviewPayload)
-//   }
-//   if (!reviews.length) {
-//       res.status(404).json({
-//           message: 'No reviews found',
-//           statusCode: 404
-//       })
-//   }
-//   res.status(200).json({Review: reviewAnswer})
-// })
 router.get('/current',
     requireAuth,
     async (req, res) => {

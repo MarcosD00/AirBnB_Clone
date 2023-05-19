@@ -127,7 +127,7 @@ router.get(
         })
         
         if (review) {
-            const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0) || 1;
+            const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0);
             const avg = revAvg / (review?.length || 1);
             spot.avgRating = parseFloat(avg.toFixed(1))
         } else {
@@ -144,8 +144,10 @@ router.get(
     };
     res.status(200);
     res.json({
-        Spots: spotObj
-    })
+        Spots: spotObj,
+        page: page,
+        size: size
+    });
 });
 
 /*GET ALL SPOTS FROM CURRENT USER*/
@@ -510,12 +512,12 @@ router.post(
             });
 
 
-        if (!spots) res.status(404).json({
+        if (!spots) return res.status(404).json({
             message: "Spot couldn't be found",
             statusCode: 404
         });
 
-        if (reviewsOfSpots) res.status(403).json({
+        if (reviewsOfSpots) return res.status(403).json({
             message: "User already has a review for this spot",
             statusCode: 403
         });

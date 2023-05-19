@@ -41,39 +41,47 @@ router.delete("/:bookingId",
     });
 
 /*GET ALL THE BOOKINGS FROM CURRENT USER  */
-router.get('/current', requireAuth, async (req, res) => {
-    const bookings = await Booking.findAll({
-        where: {userId: req.user.id}
-    });
+router.get('/current',
+    requireAuth,
+    async (req, res) => {
+        
+        const bookingObj = [];
+        const { user } = req;
 
-    const bookingList = []
-    for (let i of bookings) {
-        const spots = await Spot.findOne({
-            where: {
-                id: i.spotId
-            },
-            attributes: {
-                exclude: ['description', 'createdAt', 'updatedAt']
-            }
+        const bookings = await Booking.findAll({
+            where: { userId: user.id },
+            include: [
+                {
+                    model: Spot,
+                    attributes: ['id', 'ownerId', 'address', 'city',
+                    'state', 'country', 'lat', 'lng', 'name', 'price'],
+                    include: [{ model: SpotImages }]
+                }
+            ]
         });
 
-        const dataForBook = {}
-        for (let key in i.dataValues) dataForBook[key] = i[key]
+        if (bookings.length) bookings.forEach(i => bookingObj.push(i.toJSON()))
+        else bookingObj.push(bookings);
 
-        const dataForSpots = {}
-        for (let key in spots.dataValues) dataForSpots[key] = spots[key]
+        for (let books of bookingObj) {
 
-        const image = await SpotImages.findOne({
-            where: {spotId: spots["id"]},
-            attributes: ['url']
-        });
+            if (books.Spot.SpotImages.length) {
+                
+                const prev = books.Spot.SpotImages.filter(i => i.preview === true);
+                if (prev.length){ 
+                    books.Spot.previewImage = prev[0].url
+                }
+                else{ 
+                    books.Spot.previewImage = "No Preview Image Available";
+                };
+            } else {
+                books.Spot.previewImage = "No Preview Image Available";
+            };
+            delete books.Spot.SpotImages;
+        };
 
-        dataForBook.Spot = dataForSpots
-        dataForBook.Spot.previewImage = image || image.url
-        bookingList.push(dataForBook)
-    }
-    res.status(200).json({Bookings: bookingList})
-})
+        res.status(200).json({Bookings: bookingObj});
+    })
 
 
 /* EDIT BOOKINGS BY ID */

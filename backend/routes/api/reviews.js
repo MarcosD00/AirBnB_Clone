@@ -6,10 +6,6 @@ const {requireAuth,  restoreUser } = require('../../utils/auth');
 const { Spot, SpotImages, Review, ReviewImage, User, } = require('../../db/models');
 const router = express.Router();
 
-<<<<<<< HEAD
-=======
-
->>>>>>> f4bcb04a2ef1a99891f72b94b67051ec309a7c7e
 router.get('/current',
     requireAuth,
     async (req, res) => {

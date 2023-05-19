@@ -14,19 +14,15 @@ router.delete(
     const { user } = req;
 
     const reviewImage = await ReviewImage.findByPk(req.params.imageId);
-    const toBeDeleted = await Review.findOne({
-        where: {
-            id: reviewImage.reviewId
-        }
-    });
-
+    
     if (!reviewImage) {
         return res.status(404).json({
             message: "Review Image couldn't be found",
             statusCode: 404
         })
     };
-
+    
+    const toBeDeleted = await Review.findOne({where: {id: reviewImage.reviewId}});
 
     if (user.id !== toBeDeleted.userId) {
         return res.status(403).json({

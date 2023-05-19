@@ -6,6 +6,45 @@ const {requireAuth,  restoreUser } = require('../../utils/auth');
 const { Spot, SpotImages, Review, ReviewImage, User, } = require('../../db/models');
 const router = express.Router();
 
+// router.get('/current', requireAuth, async (req, res) => {
+
+//   let reviews = await Review.findAll({
+//       where: {userId: req.user.id}
+//   })
+//   let reviewAnswer = []
+//   for (let review of reviews) {
+//       let reviewPayload = {}
+//       let spot = await Spot.findOne({
+//           where: {id: review.spotId},
+//           attributes: ['id', 'ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'price']
+//       })
+//       let preview = await SpotImages.findOne({
+//           where: {spotId: spot.id},
+//           attributes: ['url']
+//       })
+//       let reviewImages = await ReviewImage.findAll({
+//           where: {reviewId: review.id},
+//           attributes: ['id', 'url']
+//       })
+//       for(let key in review.dataValues) reviewPayload[key] = review[key]
+//       let spotPOJO = {}
+//       for (let key in spot.dataValues) spotPOJO[key] = spot[key]
+//       spotPOJO.previewImage = preview ? JSON.stringify(preview.url).split('"')[1]
+//       : 'No preview available'
+//       let {id, firstName, lastName} = req.user
+//       reviewPayload.User = {id, firstName, lastName}
+//       reviewPayload.Spot = spotPOJO
+//       reviewPayload.ReviewImages = reviewImages
+//       reviewAnswer.push(reviewPayload)
+//   }
+//   if (!reviews.length) {
+//       res.status(404).json({
+//           message: 'No reviews found',
+//           statusCode: 404
+//       })
+//   }
+//   res.status(200).json({Review: reviewAnswer})
+// })
 router.get('/current',
     requireAuth,
     async (req, res) => {
@@ -40,22 +79,27 @@ router.get('/current',
           if (Object.keys(review).length === 0) break;
 
 
+          // if (review.Spot.length !== 0) {
           if (review.Spot.SpotImages.length !== 0) {
+            // const preview = review.Spot.filter(i => i.preview === true);
+            const preview = review.Spot.SpotImages.find(i => i.preview === true);
 
-            const preview = review.Spot.SpotImages.filter(i => i.preview === true);
+            
+            if (preview) {
+              review.Spot.previewImage = preview.url;
 
-            if (!preview.length) {
-              review.Spot.previewImage = preview[0].url
+              delete review.Spot.SpotImages
             } else review.Spot.previewImage = "No Preview Image Available";
+            
           }
           else {
             review.Spot.previewImage = "No Preview Image Available";
-          }
-        }
+          };
+        };
 
         res.status(200).json(
             { 
-                Reviews: revList 
+                Reviews: revList
             });
     
     })
@@ -69,18 +113,13 @@ router.post(
       const reviewId = (req.params.reviewId)
       const { url } = req.body
 
+      const revList = await ReviewImage.findAll({
+        where: { reviewId }
+      });
+
       const review = await Review.findByPk(reviewId, {
         include: [{ model: ReviewImage }]
       });
-          
-      const newRevImages = await ReviewImage.create({
-        reviewId,
-        url
-     });
-
-      const revList = await ReviewImage.findAll({
-          where: { reviewId }
-        });
 
       if (revList.length >= 10) res.status(403).json({
         "message": "Maximum number of images for this resource was reached",
@@ -96,6 +135,11 @@ router.post(
           message: "Forbidden",
           statusCode: "403"
         });
+        
+      const newRevImages = await ReviewImage.create({
+        reviewId,
+        url
+     });
 
       res.json({id: newRevImages.id, url: newRevImages.url});
     });

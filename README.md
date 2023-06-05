@@ -1,4 +1,4 @@
-# `AirBnB_Clone(for now)`
+# `Bee-nb`
 
 ## Database Schema Design
 

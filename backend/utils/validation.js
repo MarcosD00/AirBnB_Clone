@@ -9,7 +9,7 @@ const handleErrorsForSpots = (req, res, next) => { // takes in any errors from v
     const errors = {};
     validationErrors
       .array()
-      .forEach(error => errors[error.param] = error.msg);
+      .forEach(error => errors[error.path] = error.msg);
 
     const err = Error("Bad request.");
     err.title = "Validation Error";
@@ -28,7 +28,7 @@ const handleValidationErrors = (req, _res, next) => {
     const errors = {};
     validationErrors
       .array()
-      .forEach(error => errors[error.param] = error.msg);
+      .forEach(error => errors[error.path] = error.msg);
 
     const err = Error("Bad request.");
     err.errors = errors;

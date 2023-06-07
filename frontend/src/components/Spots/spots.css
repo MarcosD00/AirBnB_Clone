@@ -1,0 +1,51 @@
+
+.spot-info{
+    display: flex;
+    flex-direction: column;
+    max-width: 375px;
+    max-height: 350px;
+    margin: 1px;
+    flex: 20%;
+}
+
+.spot-card{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 2%;
+    flex-wrap: wrap;
+    
+}
+
+.one-spot {
+    background-color: #2ecc71;
+    height: 600px;
+    border: 2.5px solid black;
+}
+
+.one-info-spot{
+display: flex;
+justify-content: space-between;
+ color:rgb(71, 71, 30);   
+}
+
+.spot-card .tooltiptext {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    
+    width: 120px;
+    top: 100%;
+    left: 50%;
+    margin-left: -60px;
+
+    position: absolute;
+  
+  }
+  
+  .spot-card:hover .tooltiptext {
+    visibility: visible;
+  }

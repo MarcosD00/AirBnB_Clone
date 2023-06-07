@@ -20,6 +20,18 @@ function App() {
           <Route exact path="/">
             <Spots />
           </Route>
+          <Route path="/spots/:spotId">
+            <></>
+          </Route>
+          <Route  exact path="/spots/:spotId/edit">
+            <></>
+          </Route>
+          <Route path="/spots/new">
+            <></>
+          </Route>
+          <Route path="/spots/current">
+            <></>
+          </Route>
         </Switch>}
     </>
   );

@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 
-const { setTokenCookie, restoreUser } = require('../../utils/auth');
+const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
 const { User } = require('../../db/models');
 const router = express.Router();
 
@@ -25,6 +25,7 @@ router.post(
     async (req, res, next) => {
       const { credential, password } = req.body;
   
+      
       const user = await User.unscoped().findOne({
         where: {
           [Op.or]: {
@@ -33,7 +34,7 @@ router.post(
           }
         }
       });
-  
+      
       if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
         const err = new Error('Login failed');
         err.status = 401;
@@ -41,13 +42,16 @@ router.post(
         err.errors = { credential: 'The provided credentials were invalid.' };
         return next(err);
       }
-  
+      
       const safeUser = {
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         username: user.username,
       };
-  
+      
+      
       await setTokenCookie(res, safeUser);
   
       return res.json({
@@ -58,6 +62,8 @@ router.post(
 
   router.delete(
     '/',
+    requireAuth,
+    restoreUser,
     (_req, res) => {
       res.clearCookie('token');
       return res.json({ message: 'success' });
@@ -71,6 +77,8 @@ router.post(
       if (user) {
         const safeUser = {
           id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
           username: user.username,
         };

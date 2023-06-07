@@ -52,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
           }
         }
       },
-      lasttName: {
+      lastName: {
         type: DataTypes.STRING(30),
         allowNull: false,
         validate: {

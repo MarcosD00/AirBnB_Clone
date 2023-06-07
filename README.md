@@ -1,8 +1,6 @@
-# `<name of application here>`
+# `Bee-nb`
 
 ## Database Schema Design
-
-`<insert database schema design here>`
 
 ## API Documentation
 

@@ -1,9 +1,7 @@
 
 .spot-info{
-    display: flex;
+    display: grid;
     flex-direction: column;
-    max-width: 375px;
-    max-height: 350px;
     margin: 1px;
     flex: 20%;
 }
@@ -19,33 +17,30 @@
 
 .one-spot {
     background-color: #2ecc71;
-    height: 600px;
+    aspect-ratio: 1 / 1;
     border: 2.5px solid black;
 }
 
 .one-info-spot{
-display: flex;
-justify-content: space-between;
- color:rgb(71, 71, 30);   
+    display: flex;
+    justify-content: space-between;
+    color:rgb(71, 71, 30);   
 }
 
-.spot-card .tooltiptext {
+.spot-info .tooltiptext {
     visibility: hidden;
     background-color: black;
     color: #fff;
     text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
+    border-radius: 10px;
+    padding: 5px;
     
     width: 120px;
     top: 100%;
     left: 50%;
-    margin-left: -60px;
-
-    position: absolute;
-  
+    margin-left: 30%;
   }
   
-  .spot-card:hover .tooltiptext {
+  .spot-info:hover .tooltiptext {
     visibility: visible;
   }

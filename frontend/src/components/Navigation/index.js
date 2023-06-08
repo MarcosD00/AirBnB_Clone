@@ -6,19 +6,19 @@ import './Navigation.css';
 
 function Navigation({ isLoaded }){
   const sessionUser = useSelector(state => state.session.user);
-
+  const createSpot = "create-spot" + (sessionUser ? "" : " hidden")
   return (
     <ul>
       <li>
-        <NavLink exact to="/">Home</NavLink>
+        <NavLink exact to="/">
+          <img src='beelogo.png' alt="Logo"></img>
+        </NavLink>
       </li>
       {isLoaded && (
         <>
-        {user?
-         ( <li>
+           <li className={createSpot}>
             <NavLink to="/spots/new">Create a new spot</NavLink>
-          </li>) :(<></>)
-        }
+          </li>
           <li>
             <ProfileButton user={sessionUser} />
           </li>

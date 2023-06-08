@@ -25,14 +25,14 @@ const SpotValidator = [
     check('country')
     .notEmpty()
     .withMessage('Country is required'),
-    check('lat')
-    .notEmpty()
-    .isNumeric()
-    .withMessage('Latitude is not valid'),
-    check('lng')
-    .notEmpty()
-    .isNumeric()
-    .withMessage('Longitude is not valid'),
+    // check('lat')
+    // .notEmpty()
+    // .isNumeric()
+    // .withMessage('Latitude is not valid'),
+    // check('lng')
+    // .notEmpty()
+    // .isNumeric()
+    // .withMessage('Longitude is not valid'),
     check('name')
     .notEmpty()
     .isLength({ max: 50 })

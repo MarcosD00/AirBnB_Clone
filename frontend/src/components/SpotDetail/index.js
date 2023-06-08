@@ -9,9 +9,6 @@ export default function SpotDetail () {
     const { spotId } = useParams();
     const spotDetails = useSelector((state) => state.spots.singleSpotObject)
 
-    console.log(spotDetails)
-    console.log("===================",spotDetails.SpotImages)
-    
     const reserveClick = (e) => {
         e.preventDefault();
         alert('Feature Coming Soon...');
@@ -52,7 +49,7 @@ export default function SpotDetail () {
                             <div>${spotDetails.price} night</div>
                             <div>
                                 {
-                                    spotDetails.avgStarRating === null
+                                    spotDetails.avgRating === null
                                         ? <i className="fa-solid fa-star">NEW</i>
                                         : <i className="fa-solid fa-star">{Number.parseFloat(spotDetails.avgRating).toFixed(1)}</i>
                                 }

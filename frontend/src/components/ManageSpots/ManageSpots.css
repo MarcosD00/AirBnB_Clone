@@ -1,27 +1,26 @@
+.manage-spot-page {
+    margin: 0px 0px 0px 4%;
+}
 
-.spot-info{
-    margin: 50px 50px 0px 50px;
+.manage-spot-page .magane-tilte {
+    font-size: x-large;
 }
 
 .spot-card{
     display: grid;
     grid-template-columns: 25% 25% 25% 25%;
     column-gap: 5px;
-    margin: 2%;
     
 }
 
-.one-spot {
-    background-color: rgba(158, 158, 158, 0.355);
-    aspect-ratio: 1 / 1;
-    border: 2.5px solid black;
+.update-delete-buttons {
+    display: flex;
+    column-gap: 3.5%;
 }
 
-
-.one-info-spot{
+.spot-place-stars {
     display: flex;
-    justify-content: space-between;
-    color:rgb(71, 71, 30);   
+    justify-content: space-around;
 }
 
 .spot-info .tooltiptext {
@@ -41,8 +40,3 @@
   .spot-info:hover .tooltiptext {
     visibility: visible;
   }
-
-  .img {
-    max-width: 307.6px;
-    height: 307.6px;
-}

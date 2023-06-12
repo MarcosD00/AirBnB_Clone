@@ -54,7 +54,9 @@ router.get('/current',
                 {
                     model: Spot,
                     attributes: ['id', 'ownerId', 'address', 'city',
-                    'state', 'country', 'lat', 'lng', 'name', 'price'],
+                    'state', 'country', 
+                    'lat', 'lng',
+                     'name', 'price'],
                     include: [{ model: SpotImages }]
                 }
             ]

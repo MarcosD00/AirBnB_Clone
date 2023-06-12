@@ -25,14 +25,14 @@ const SpotValidator = [
     check('country')
     .notEmpty()
     .withMessage('Country is required'),
-    check('lat')
-    .notEmpty()
-    .isNumeric()
-    .withMessage('Latitude is not valid'),
-    check('lng')
-    .notEmpty()
-    .isNumeric()
-    .withMessage('Longitude is not valid'),
+    // check('lat')
+    // .notEmpty()
+    // .isNumeric()
+    // .withMessage('Latitude is not valid'),
+    // check('lng')
+    // .notEmpty()
+    // .isNumeric()
+    // .withMessage('Longitude is not valid'),
     check('name')
     .notEmpty()
     .isLength({ max: 50 })
@@ -185,7 +185,7 @@ router.get(
             })
             
             if (review) {
-                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0) || 1;
+                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0);
                 const avg = revAvg / (review?.length || 1);
                 spot.avgRating = parseFloat(avg.toFixed(1))
             } else {
@@ -320,7 +320,7 @@ router.get(
             })
             
             if (review) {
-                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0) || 1;
+                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0);
                 const avg = revAvg / (review?.length || 1);
                 spot.avgRating = parseFloat(avg.toFixed(1))
             } else {

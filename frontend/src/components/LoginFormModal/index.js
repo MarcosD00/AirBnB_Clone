@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as sessionActions from "../../store/session";
 import { useDispatch } from "react-redux";
 import { useModal } from "../../context/Modal";
+import DemoUser from "./UserDemo"
 import "./LoginForm.css";
 
 function LoginFormModal() {
@@ -25,11 +26,14 @@ function LoginFormModal() {
   };
 
   return (
-    <>
+    <div className="login-form">
       <h1>Log In</h1>
       <form onSubmit={handleSubmit}>
+          {errors.credential && (
+            <p className="error-popup">{errors.credential}</p>
+          )}
+        <p>Username or Email</p>
         <label>
-          Username or Email
           <input
             type="text"
             value={credential}
@@ -37,8 +41,8 @@ function LoginFormModal() {
             required
           />
         </label>
+        <p>Password</p>
         <label>
-          Password
           <input
             type="password"
             value={password}
@@ -46,12 +50,16 @@ function LoginFormModal() {
             required
           />
         </label>
-        {errors.credential && (
-          <p>{errors.credential}</p>
-        )}
-        <button type="submit">Log In</button>
+        <button className="log-in-btn"
+         disabled={
+          password.length < 1 || credential.length < 1
+      }
+        type="submit">Log In</button>
       </form>
-    </>
+            <DemoUser 
+            itemText="Log in as Demo User"
+            />
+    </div>
   );
 }
 

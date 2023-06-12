@@ -39,7 +39,7 @@ export default function AddSpot() {
 
 
     const handleSubmit = async (e) => {
-        // e.preventDefault()
+        e.preventDefault()
 
         const validationErrors = [];
         if (!country.length){
@@ -84,8 +84,7 @@ export default function AddSpot() {
             { url: imgFive, preview: false },
         ]
         const createdSpot = {
-            country, address, city, state, description, price, name, 
-            lat: 1, lng: 1
+            country, address, city, state, description, price, name, lat: 1, lng: 1
         } 
         const newSpot = await dispatch(addSpotThunk(createdSpot, imgSpot))
         

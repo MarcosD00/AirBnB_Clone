@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from 'react-redux';
+import { NavLink } from "react-router-dom";
 import * as sessionActions from '../../store/session';
 import OpenModalMenuItem from './OpenModalMenuItem';
 import LoginFormModal from '../LoginFormModal';
 import SignupFormModal from '../SignupFormModal';
+// import "./ProfileButtonStyle.css"
 
 function ProfileButton({ user }) {
   const dispatch = useDispatch();
@@ -18,11 +20,11 @@ function ProfileButton({ user }) {
   useEffect(() => {
     if (!showMenu) return;
 
-    const closeMenu = (e) => {
-      if (!ulRef.current.contains(e.target)) {
-        setShowMenu(false);
-      }
-    };
+    // const closeMenu = (e) => {
+    //   if (!ulRef.current.contains(e.target)) {
+    //     setShowMenu(false);
+    //   }
+    // };
 
     document.addEventListener('click', closeMenu);
 
@@ -41,17 +43,19 @@ function ProfileButton({ user }) {
 
   return (
     <div className="dropdown">
-      <button className="profile-button" onClick={openMenu}>
+        <button onClick={openMenu} id="menu-button-top-right">
+        <i className="fa-solid fa-bars"></i>
+        &nbsp;&nbsp;
         <i className="fas fa-user-circle" />
       </button>
       <ul className={ulClassName} ref={ulRef}>
         {user ? (
           <>
-            <li>{user.username}</li>
-            <li>{user.firstName} {user.lastName}</li>
+            <li>Hello, {user.firstName}</li>
             <li>{user.email}</li>
+            <li><NavLink to="/spots/current">Manage Spots</NavLink></li>
             <li>
-              <button onClick={logout}>Log Out</button>
+              <button onClick={logout} id="menu-button-top-right">Log Out</button>
             </li>
           </>
         ) : (

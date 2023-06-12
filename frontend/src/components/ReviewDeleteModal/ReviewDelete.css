@@ -1,0 +1,15 @@
+.submit {
+    background-color: rgb(191, 21, 21);
+}
+
+.submit:hover {
+    background-color: red;
+}
+
+.keep {
+    background-color: darkgray;
+}
+
+.modal-content {
+   width: 800px;
+}

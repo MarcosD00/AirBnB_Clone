@@ -3,8 +3,8 @@ import { csrfFetch } from './csrf';
 const LOAD_SPOT = "spots/LOAD_SPOT";
 const LOAD_SINGLE_SPOT = "spots/LOAD_SINGLE_SPOT"
 const ADD_SPOT = "spots/ADD_SPOT"
-const EDIT_SPOT = "spots/editSpot";
-const DELETE_SPOT = "spots/deleteSpot";
+const UPDATE_SPOT = "spots/UPDATE_SPOT";
+const DELETE_SPOT = "spots/DELETE_SPOT";
 
 export const loadSpotsAction = (spots) => ({
   type: LOAD_SPOT,
@@ -24,6 +24,11 @@ export const addSpotAction = (spot) => ({
   export const removeSpotAction = (spotId) => ({
     type: DELETE_SPOT,
     spotId
+  });
+
+  export const updateSpotAction = (spot) => ({
+    type: UPDATE_SPOT,
+    spot
   });
 
 //Thunk that GETs all the users of spots
@@ -67,23 +72,36 @@ export const addSpotThunk = (newSpot, spotImages) => async (dispatch) => {
       return spot;
     };
   };
-
-  export const deleteSpot = (id) => async (dispatch) => {
+//Thunk that DELETEs the spots of the logged in user
+  export const deleteSpotThunk = (id) => async (dispatch) => {
     const res = await csrfFetch(`/api/spots/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     });
   
     if (res.ok) {
-      const data = await res.json();
+
       dispatch(removeSpotAction(id));
       return res
+    };
+  };
+
+  export const updateSpot = (spotDetail) => async (dispatch) => {
+    const res = await csrfFetch(`/api/spots/${spotDetail.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(spotDetail)
+    })
+    if (res.ok) {
+      const data = await res.json();
+      dispatch(updateSpotAction(data));
     };
   };
 
 const initialState = {
   SpotsObject: {},
   singleSpotObject: {},
+  loggedInUserSpotObj:{}
 };
 
 const spotsReducer = (state = initialState, action) => {
@@ -121,11 +139,22 @@ const spotsReducer = (state = initialState, action) => {
         ...state,
         SpotsObject: {...state.SpotsObject},
         singleSpotObject: {...state.singleSpotObject},
+        loggedInUserSpotObj: {...state.loggedInUserSpotObj},
     };
     delete newState.SpotsObject[action.spotId];
     delete newState.singleSpotObject[action.spotId];
+    delete newState.loggedInUserSpotObj[action.spotId];
     return newState;
     }
+
+    case UPDATE_SPOT: {
+        const newState = {
+          ...state,
+          loggedInUserSpotObj: { ...state.user }
+        };
+        newState.loggedInUserSpotObj[action.spot.id] = { ...action.spot };
+        return newState;
+      }
     default:
       return state;
   };

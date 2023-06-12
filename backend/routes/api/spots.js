@@ -185,7 +185,7 @@ router.get(
             })
             
             if (review) {
-                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0) || 1;
+                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0);
                 const avg = revAvg / (review?.length || 1);
                 spot.avgRating = parseFloat(avg.toFixed(1))
             } else {
@@ -320,7 +320,7 @@ router.get(
             })
             
             if (review) {
-                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0) || 1;
+                const revAvg = review.reduce((acc, value) => acc + (value?.stars || 0), 0);
                 const avg = revAvg / (review?.length || 1);
                 spot.avgRating = parseFloat(avg.toFixed(1))
             } else {
